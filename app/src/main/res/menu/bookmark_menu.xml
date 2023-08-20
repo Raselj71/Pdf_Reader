@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <item
+        android:id="@+id/share_bookmark"
+        android:icon="@drawable/ic_baseline_share_recyler"
+        android:title="Share"/>
+
+    <item android:title="Remove"
+        android:icon="@drawable/ic_baseline_delete_forever_24"
+        android:id="@+id/remove_bookmark"/>
+
+</menu>

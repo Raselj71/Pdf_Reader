@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <item
+
+        android:id="@+id/bookmark_all"
+        android:icon="@drawable/ic_baseline_bookmark_24"
+        android:title="Bookmark"/>
+
+
+
+    <item android:id="@+id/rename_item"
+        android:title="Rename"
+        android:icon="@drawable/ic_baseline_edit_24">
+
+    </item>
+
+
+    <item android:id="@+id/share_item"
+        android:title="Share"
+        android:icon="@drawable/ic_baseline_share_recyler">
+
+    </item>
+
+    <item android:id="@+id/delete_item"
+        android:title="Delete"
+        android:icon="@drawable/ic_baseline_delete_forever_24">
+
+    </item>
+
+
+</menu>

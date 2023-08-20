@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="10dp"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        android:layout_margin="10dp"
+        android:text="Rename "
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+    </TextView>
+
+    <LinearLayout
+        android:layout_margin="10dp"
+        android:background="@color/black"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"></LinearLayout>
+
+    <EditText
+        android:background="#EAE7E7"
+        android:inputType="text"
+        android:text="Rasel Ahmed pdf file , Rasel name, rasel name"
+        android:id="@+id/rename"
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="50dp">
+
+    </EditText>
+
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/renamebutton"
+        android:textColor="@color/white"
+        android:background="@drawable/buttonfordelate"
+        android:layout_gravity="right"
+        android:textSize="20sp"
+        android:textAllCaps="false"
+        android:text="Save"
+        android:layout_margin="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+    </androidx.appcompat.widget.AppCompatButton>
+
+
+
+
+</LinearLayout>
