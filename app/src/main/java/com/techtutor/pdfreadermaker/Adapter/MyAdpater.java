@@ -2,9 +2,12 @@ package com.techtutor.pdfreadermaker.Adapter;
 
 
 
+
+
+
+
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
+
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -12,20 +15,20 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.techtutor.pdfreadermaker.Fragment.RecentPdfFile;
+
 import com.techtutor.pdfreadermaker.MainActivity;
 import com.techtutor.pdfreadermaker.MyApp;
-import com.techtutor.pdfreadermaker.PdfPreview;
 import com.techtutor.pdfreadermaker.R;
-import com.techtutor.pdfreadermaker.RoomDatabase.DatabasePdf;
+import com.techtutor.pdfreadermaker.RoomDatabase.BookMarkPdf;
+import com.techtutor.pdfreadermaker.RoomDatabase.RecentPdf;
 
-import java.io.File;
 import java.util.List;
+
 
 public class MyAdpater extends RecyclerView.Adapter<MyAdpater.myViewHolder> {
     private List<PdfData> pdfList;
@@ -65,29 +68,30 @@ public class MyAdpater extends RecyclerView.Adapter<MyAdpater.myViewHolder> {
             public void onClick(View v) {
 
 
-                mainActivity.ViewPdffile(pdf.getPath(),pdf.getName());
+                mainActivity.ViewPdffile(pdf.getPath(),pdf.getName(),pdf.getDate(),pdf.getSize());
 
 
 
 
-                DatabasePdf existingPdf = MyApp.db.databaseDao().getPdfByFilePath(pdf.getPath());
+                RecentPdf existingPdf = MyApp.db.databaseDao().getPdfByFilePath(pdf.getPath());
 
                 if (existingPdf == null) {
                     // PDF doesn't exist, insert it
                     new Thread(() -> {
 
-                        DatabasePdf databasePdf=new DatabasePdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),true,false,System.currentTimeMillis());
-                        mainActivity.insertData(databasePdf);
-                        //RecentPdfFile.adapter.notifyDataSetChanged();
+                        RecentPdf recentPdf =new RecentPdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),System.currentTimeMillis());
+                        mainActivity.insertData(recentPdf);
+                       // mainActivity.adapter.notifyDataSetChanged();
                     }).start();
                 } else {
-                  /*  // PDF already exists, update its timestamp
+                    // PDF already exists, update its timestamp
                     new Thread(() -> {
-                        existingPdf.timestamp = System.currentTimeMillis();
-                        mainActivity.db.databaseDao().insertPdf(existingPdf);
+                       RecentPdf recentPdf=new RecentPdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),System.currentTimeMillis());
+                       MyApp.db.databaseDao().updateData(recentPdf);
+                        //mainActivity.adapter.notifyDataSetChanged();
                     }).start();
 
-                   */
+
                 }
 
 
@@ -123,8 +127,27 @@ public class MyAdpater extends RecyclerView.Adapter<MyAdpater.myViewHolder> {
 
                             }
                             case R.id.bookmark_all:{
-                                DatabasePdf databasePdf=new DatabasePdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),false,true,System.currentTimeMillis());
-                                MyApp.db.databaseDao().updateData(databasePdf);
+
+                                BookMarkPdf existingPdf = MyApp.db.bookMarkDao().getPdfByFilePath(pdf.getPath());
+                                if(existingPdf==null){
+
+                                        BookMarkPdf bookMarkPdf=new BookMarkPdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),System.currentTimeMillis());
+                                        MyApp.db.bookMarkDao().insertData(bookMarkPdf);
+                                        Toast.makeText(context,"Added in Bookmarks",Toast.LENGTH_SHORT).show();
+
+                                        //mainActivity.adapter.notifyDataSetChanged();
+
+                                }else{
+
+
+                                        BookMarkPdf bookMarkPdf=new BookMarkPdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),System.currentTimeMillis());
+                                        MyApp.db.bookMarkDao().updateData(bookMarkPdf);
+                                    Toast.makeText(context,"Already Added in Bookmarks",Toast.LENGTH_SHORT).show();
+
+
+                                }
+
+
 
                                 break;
                             }

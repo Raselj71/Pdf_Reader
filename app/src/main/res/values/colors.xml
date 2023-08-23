@@ -9,4 +9,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="transparent">#00000000</color>
     <color name="tabTextColor">#AE0000</color>
+    <color name="darkModeBackground">#2C2C2C</color>
 </resources>

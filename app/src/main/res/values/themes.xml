@@ -3,7 +3,7 @@
     <style name="Theme.PdfReaderMaker" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">#FF5722</item>
-        <item name="colorPrimaryVariant">#C83101</item>
+        <item name="colorPrimaryVariant">#AE0000</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>

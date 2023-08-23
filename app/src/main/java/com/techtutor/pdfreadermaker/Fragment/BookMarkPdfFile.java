@@ -3,64 +3,71 @@ package com.techtutor.pdfreadermaker.Fragment;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.techtutor.pdfreadermaker.Adapter.BookMarkAdapter;
+import com.techtutor.pdfreadermaker.MainActivity;
+import com.techtutor.pdfreadermaker.MyApp;
 import com.techtutor.pdfreadermaker.R;
+import com.techtutor.pdfreadermaker.RoomDatabase.BookMarkPdf;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link BookMarkPdfFile#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.List;
+
+
 public class BookMarkPdfFile extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    MainActivity mainActivity;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public BookMarkPdfFile() {
-        // Required empty public constructor
+    public BookMarkPdfFile(MainActivity mainActivity){
+        this.mainActivity=mainActivity;
     }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment BookMarkPdfFile.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static BookMarkPdfFile newInstance(String param1, String param2) {
-        BookMarkPdfFile fragment = new BookMarkPdfFile();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
+       private RecyclerView recyclerView;
+    public static List<BookMarkPdf> allBoookMarkPdf;
+    public static BookMarkAdapter bookMarkAdapter;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_book_mark_pdf_file, container, false);
+        View view=inflater.inflate(R.layout.fragment_book_mark_pdf_file, container, false);
+        recyclerView=view.findViewById(R.id.bookmar_recylerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        allBoookMarkPdf=getAllBookmark();
+         bookMarkAdapter=new BookMarkAdapter(allBoookMarkPdf,getContext(),mainActivity);
+        recyclerView.setAdapter(bookMarkAdapter);
+
+
+
+
+
+
+
+
+        return view;
     }
+
+
+    public List<BookMarkPdf> getAllBookmark(){
+        return MyApp.db.bookMarkDao().getBookmarkFiles();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Update the UI when the fragment becomes visible again
+        updateUI();
+    }
+
+    public static void updateUI() {
+        // Fetch the recent files from the database
+        allBoookMarkPdf = MyApp.db.bookMarkDao().getBookmarkFiles();
+
+        // Update the RecyclerView's data with the new list of recent files
+        bookMarkAdapter.updateData(allBoookMarkPdf);
+    }
+
+
 }

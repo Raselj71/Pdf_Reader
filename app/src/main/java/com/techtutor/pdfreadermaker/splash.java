@@ -1,6 +1,6 @@
 package com.techtutor.pdfreadermaker;
 
-import static androidx.core.content.PackageManagerCompat.LOG_TAG;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -8,7 +8,7 @@ import android.app.Application;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.util.Log;
+
 
 public class splash extends AppCompatActivity {
     private static final long COUNTER_TIME = 3;

@@ -1,9 +1,7 @@
 package com.techtutor.pdfreadermaker.Adapter;
 
 
-import androidx.room.ColumnInfo;
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
+
 
 
 public class PdfData {
@@ -18,10 +16,6 @@ public class PdfData {
 
 
     private String path;
-
-
-
-
 
     public PdfData(String name, String size, String date, String path) {
         this.name = name;

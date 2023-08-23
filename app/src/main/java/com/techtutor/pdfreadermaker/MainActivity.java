@@ -24,6 +24,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,11 +33,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,17 +50,22 @@ import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
 import com.techtutor.pdfreadermaker.Adapter.PdfData;
-import com.techtutor.pdfreadermaker.Adapter.RecentAdapter;
 import com.techtutor.pdfreadermaker.Fragment.AllPdfFile;
-import com.techtutor.pdfreadermaker.Fragment.RecentPdfFile;
 import com.techtutor.pdfreadermaker.Permission.Utils;
 
-import com.techtutor.pdfreadermaker.RoomDatabase.DatabasePdf;
+import com.techtutor.pdfreadermaker.RoomDatabase.BookMarkPdf;
+import com.techtutor.pdfreadermaker.RoomDatabase.RecentPdf;
 import com.techtutor.pdfreadermaker.ViewpagerAdapter.ViewPagerAdapter;
 
 import java.io.File;
@@ -65,6 +73,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 
+import java.util.Collections;
 import java.util.Date;
 
 import java.util.List;
@@ -90,6 +99,11 @@ public class MainActivity extends AppCompatActivity {
     private PurchasesUpdatedListener purchasesUpdatedListener;
     private ImageView premiumImage;
 
+    public ViewPagerAdapter adapter;
+    private ImageView morebutton;
+
+    ReviewInfo reviewInfo;
+    ReviewManager reviewManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
         premiumImage=findViewById(R.id.premium);
         tabLayout=findViewById(R.id.tabLayout);
         viewPager=findViewById(R.id.viewpager);
+        morebutton=findViewById(R.id.more);
 
         if(!Utils.isPermissonGranted(this)){
             new AlertDialog.Builder(this)
@@ -127,6 +142,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         //  getAllPdfFile(Environment.getExternalStorageDirectory());
+
+        requestReviewInfo();
 
 
         purchasesUpdatedListener=new PurchasesUpdatedListener() {
@@ -192,6 +209,62 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        morebutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BottomSheetDialog bottomSheetDialog=new BottomSheetDialog(MainActivity.this,R.style.BottomSheetDialogTheme);
+                View view= LayoutInflater.from(MainActivity.this).inflate(R.layout.homelayout,(LinearLayout)findViewById(R.id.moreContiner));
+                LinearLayout contact,share,rate,policy;
+
+                contact=view.findViewById(R.id.contact_us);
+                share=view.findViewById(R.id.share_app);
+                rate=view.findViewById(R.id.rate_app);
+                policy=view.findViewById(R.id.policy);
+
+
+                contact.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        contactus();
+                        bottomSheetDialog.dismiss();
+                    }
+                });
+
+                share.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        shareap();
+                        bottomSheetDialog.dismiss();
+                    }
+                });
+
+                rate.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        rateus();
+                        bottomSheetDialog.dismiss();
+                    }
+                });
+
+                policy.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        policy();
+                        bottomSheetDialog.dismiss();
+                    }
+                });
+
+
+
+
+                bottomSheetDialog.setContentView(view);
+                bottomSheetDialog.show();
+
+
+            }
+        });
+
 
 
 
@@ -225,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager(), getLifecycle(), MainActivity.this);
+         adapter = new ViewPagerAdapter(getSupportFragmentManager(), getLifecycle(), MainActivity.this);
         viewPager.setAdapter(adapter);
 
         new TabLayoutMediator(tabLayout, viewPager,
@@ -283,10 +356,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-  public void ViewPdffile(String filepath, String fileName){
+  public void ViewPdffile(String filepath, String fileName, String date,String size){
         Intent intent=new Intent(MainActivity.this,PdfPreview.class);
         intent.putExtra("pdf",filepath);
         intent.putExtra("name",fileName);
+        intent.putExtra("size",size);
+        intent.putExtra("date",date);
         startActivity(intent);
     }
 
@@ -298,7 +373,8 @@ public class MainActivity extends AppCompatActivity {
                 MediaStore.Files.FileColumns.DATE_MODIFIED};
 
         String selection = MediaStore.Files.FileColumns.MIME_TYPE + "='application/pdf'";
-        Cursor cursor = getContentResolver().query(pdfUri, projection, selection, null, null);
+        String sortOrder = MediaStore.Files.FileColumns.DATE_MODIFIED + " DESC"; // Order by date modified in descending order
+        Cursor cursor = getContentResolver().query(pdfUri, projection, selection, null, sortOrder);
 
         if (cursor != null) {
             while (cursor.moveToNext()) {
@@ -316,7 +392,9 @@ public class MainActivity extends AppCompatActivity {
             }
             cursor.close();
         }
-       // pdfAdapter.notifyDataSetChanged();
+
+
+
     }
 
 
@@ -422,6 +500,23 @@ public class MainActivity extends AppCompatActivity {
                                pdfList.remove(position);
                               AllPdfFile.adpater.notifyItemRemoved(position);
                                dialog.dismiss();
+
+                               RecentPdf recentPdf= db.databaseDao().getPdfByFilePath(path);
+                               if(recentPdf!=null){
+
+                                   db.databaseDao().deleteData(recentPdf);
+                               }
+
+                              BookMarkPdf bookMarkPdf=db.bookMarkDao().getPdfByFilePath(path);
+                               if(bookMarkPdf!=null){
+                                   db.bookMarkDao().deleteData(bookMarkPdf);
+                               }
+
+
+
+
+
+
                           }else{
                               Toast.makeText(MainActivity.this,"Try Again",Toast.LENGTH_SHORT).show();
                           }
@@ -458,7 +553,15 @@ public class MainActivity extends AppCompatActivity {
                        }else{
                            if(name.endsWith(".pdf")){
 
+                               File oldfile=new File(path);
+                               File newFile=new File(oldfile.getParent(),name);
 
+                               if(oldfile.renameTo(newFile)){
+                                   pdfList.get(position).setName(name);
+                                   pdfList.get(position).setPath(newFile.getAbsolutePath());
+                                   AllPdfFile.adpater.notifyItemChanged(position);
+                                   dialog.dismiss();
+                               }
 
 
                            }else{
@@ -518,19 +621,84 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void insertData(DatabasePdf databasePdf){
-        db.databaseDao().insertData(databasePdf);
+    public void insertData(RecentPdf recentPdf){
+        db.databaseDao().insertData(recentPdf);
        
 
     }
 
-    /*
-    public  List<DatabasePdf> getAllRecentFile(){
+   public void contactus(){
 
-        return db.databaseDao().getRecentPdfFiles();
+       Intent intent = new Intent(Intent.ACTION_SEND);
+       String[] recipients = {"Rasel.cse.green@gmail.com"};
+       intent.putExtra(Intent.EXTRA_EMAIL, recipients);
+       intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+       intent.putExtra(Intent.EXTRA_TEXT, "");
+       intent.putExtra(Intent.EXTRA_CC, "");
+       intent.setType("text/html");
+       intent.setPackage("com.google.android.gm");
+       startActivity(Intent.createChooser(intent, "Send mail"));
+
+   }
+
+   public void shareap(){
+
+       Intent sendIntent = new Intent();
+       sendIntent.setAction(Intent.ACTION_SEND);
+       sendIntent.putExtra(Intent.EXTRA_TEXT,
+               "Download " + getResources().getString(R.string.app_name) + " : " + "https://play.google.com/store/apps/details?id=" + getPackageName());
+       sendIntent.setType("text/plain");
+       startActivity(sendIntent);
+
+   }
+   public void rateus(){
+
+       final String AppPackageName=getPackageName();
+       try {
+           Intent intent=new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="+ AppPackageName));
+           startActivity(intent);
+
+       }catch (Exception exception){
+
+           Intent intent=new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id="+ AppPackageName));
+           startActivity(intent);
+       }
+
+   }
+
+   public void policy(){
+       startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://freshvpn22.blogspot.com/p/pdf-reader-privacy-policy.html")));
+   }
+
+   public void requestReviewInfo(){
+        reviewManager= ReviewManagerFactory.create(MainActivity.this);
+       Task<ReviewInfo> request=reviewManager.requestReviewFlow();
+      request.addOnCompleteListener(task -> {
+              if (task.isSuccessful()){
+                  reviewInfo=task.getResult();
+              }else{
+
+              }
+
+
+      });
+   }
+
+   public void showReviewFlow(){
+        if (reviewInfo!=null){
+            Task<Void> flow=reviewManager.launchReviewFlow(MainActivity.this,reviewInfo);
+            flow.addOnCompleteListener(task -> {
+                super.onBackPressed();
+            });
+        }
+   }
+
+    @Override
+    public void onBackPressed() {
+        showReviewFlow();
+
+
     }
-
-     */
 }
 
 

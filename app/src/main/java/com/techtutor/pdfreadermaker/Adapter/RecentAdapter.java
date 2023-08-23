@@ -8,31 +8,39 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.techtutor.pdfreadermaker.Fragment.RecentPdfFile;
 import com.techtutor.pdfreadermaker.MainActivity;
+import com.techtutor.pdfreadermaker.MyApp;
 import com.techtutor.pdfreadermaker.R;
-import com.techtutor.pdfreadermaker.RoomDatabase.DatabasePdf;
+import com.techtutor.pdfreadermaker.RoomDatabase.BookMarkPdf;
+import com.techtutor.pdfreadermaker.RoomDatabase.RecentPdf;
 
 import java.util.List;
 
 public class RecentAdapter extends RecyclerView.Adapter<RecentAdapter.myViewHolder > {
 
-    private List<DatabasePdf> pdfList;
+    private List<RecentPdf> pdfList;
     private Context context;
     private MainActivity mainActivity;
 
-    public RecentAdapter(List<DatabasePdf> pdfList, Context context, MainActivity mainActivity) {
+    public RecentAdapter(List<RecentPdf> pdfList, Context context, MainActivity mainActivity) {
         this.pdfList = pdfList;
         this.context = context;
         this.mainActivity = mainActivity;
     }
 
+    public  void updateData(List<RecentPdf> allRecentFiles) {
+        pdfList=allRecentFiles;
+        notifyDataSetChanged();
+    }
 
 
-    public void setRecentPdfList(List<DatabasePdf> list){
+    public void setRecentPdfList(List<RecentPdf> list){
         pdfList=list;
         notifyDataSetChanged();
 
@@ -48,7 +56,7 @@ public class RecentAdapter extends RecyclerView.Adapter<RecentAdapter.myViewHold
 
     @Override
     public void onBindViewHolder(@NonNull myViewHolder holder, int position) {
-        DatabasePdf pdf = pdfList.get(position);
+        RecentPdf pdf = pdfList.get(position);
         holder.pdfTile.setText(pdf.getName());
         holder.datetv.setText(pdf.getDate());
         holder.sizetv.setText(pdf.getSize());
@@ -58,7 +66,7 @@ public class RecentAdapter extends RecyclerView.Adapter<RecentAdapter.myViewHold
             public void onClick(View v) {
 
 
-                mainActivity.ViewPdffile(pdf.getPath(),pdf.getName());
+                mainActivity.ViewPdffile(pdf.getPath(),pdf.getName(),pdf.getDate(),pdf.getSize());
                // DatabasePdf databasePdf=new DatabasePdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),true,false);
 
 
@@ -84,10 +92,32 @@ public class RecentAdapter extends RecyclerView.Adapter<RecentAdapter.myViewHold
                                 break;
                             }
                             case R.id.remove_recent:{
+                                MyApp.db.databaseDao().deleteData(pdf);
+                                RecentPdfFile.updateUI();
 
-                                mainActivity.renamefile(pdf.getPath(),pdf.getName(),position);
                                 break;
 
+                            }
+                            case R.id.bookmark_recent:{
+                                BookMarkPdf existingPdf = MyApp.db.bookMarkDao().getPdfByFilePath(pdf.getPath());
+
+                                if(existingPdf==null){
+
+                                    BookMarkPdf bookMarkPdf=new BookMarkPdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),System.currentTimeMillis());
+                                    MyApp.db.bookMarkDao().insertData(bookMarkPdf);
+                                    Toast.makeText(context,"Added in Bookmarks",Toast.LENGTH_SHORT).show();
+
+                                    //mainActivity.adapter.notifyDataSetChanged();
+
+                                }else{
+
+
+                                    BookMarkPdf bookMarkPdf=new BookMarkPdf(0,pdf.getName(),pdf.getSize(),pdf.getDate(),pdf.getPath(),System.currentTimeMillis());
+                                    MyApp.db.bookMarkDao().updateData(bookMarkPdf);
+                                    Toast.makeText(context,"Already Added in Bookmarks",Toast.LENGTH_SHORT).show();
+
+
+                                }
                             }
 
                         }

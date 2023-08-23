@@ -9,21 +9,31 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 
 
-import android.graphics.Color;
+
 import android.net.Uri;
+
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 
 import com.github.barteksc.pdfviewer.PDFView;
 
-import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
+
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
 
+import com.github.barteksc.pdfviewer.listener.OnTapListener;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.techtutor.pdfreadermaker.Design.CustormScroll;
 
 import java.io.File;
@@ -35,6 +45,11 @@ public class PdfPreview extends AppCompatActivity  {
     String pdfFilename;
     int lastReadPageNumber;
     String path;
+    private boolean isToolbarVisible = true;
+    private boolean isDarkModeEnabled = false;
+    String filesize;
+    String filedate;
+    private boolean isBookmode=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +61,10 @@ public class PdfPreview extends AppCompatActivity  {
 
         path=intent.getStringExtra("pdf");
         String pdfname=intent.getStringExtra("name");
+        filedate=intent.getStringExtra("date");
+        filesize=intent.getStringExtra("size");
+
+
 
 
         pdfFilename=pdfname;
@@ -97,10 +116,26 @@ public class PdfPreview extends AppCompatActivity  {
                 .nightMode(false)
                 .scrollHandle(new CustormScroll(this))
 
+                .onTap(new OnTapListener() {
+                    @Override
+                    public boolean onTap(MotionEvent e) {
 
+                           if (isToolbarVisible){
+                               getSupportActionBar().hide();
+                               isToolbarVisible=false;
+                           } else {
+                                   // Show the toolbar
+                                   getSupportActionBar().show();
+                                   isToolbarVisible = true;
+                               }
+                        return false;
+                    }
+                })
 
 
                 .load();
+
+
 
 
 
@@ -114,10 +149,16 @@ public class PdfPreview extends AppCompatActivity  {
     }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-                  if (item.getItemId()==R.id.sharePdf){
-                        sharepdf();
+             if(item.getItemId()==R.id.darkmode){
+                 isDarkModeEnabled = !isDarkModeEnabled;
+                 applyDarkMode();
+             }
+             if(item.getItemId()==R.id.setting){
+                 showBottomSheet();
+             }
 
-                  }
+
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -144,5 +185,159 @@ public class PdfPreview extends AppCompatActivity  {
 
     }
 
+    void applyDarkMode(){
 
+        if (isDarkModeEnabled) {
+            // Apply dark mode settings to the PDF viewer
+          pdfView.setNightMode(true);
+          pdfView.loadPages();
+
+            // You can adjust rendering settings for dark mode as needed
+        } else {
+            // Apply regular mode settings to the PDF viewer
+           pdfView.setNightMode(false);
+            pdfView.loadPages();
+            // Reset any rendering settings for dark mode
+        }
+
+
+    }
+
+
+    public void showBottomSheet(){
+        BottomSheetDialog bottomSheetDialog=new BottomSheetDialog(PdfPreview.this,R.style.BottomSheetDialogTheme);
+        View bottomSheetView= LayoutInflater.from(this).inflate(R.layout.bottomshit_layout,(LinearLayout)findViewById(R.id.bottomshit_container));
+        TextView title=bottomSheetView.findViewById(R.id.bottomshit_heading);
+        title.setText(pdfFilename);
+        TextView datetv=bottomSheetView.findViewById(R.id.bottomhshit_date);
+        datetv.setText(filedate);
+        TextView sizetv=bottomSheetView.findViewById(R.id.bottomshit_size);
+        sizetv.setText(filesize);
+        EditText pagnum=bottomSheetView.findViewById(R.id.gotopageEt);
+        TextView gotopage=bottomSheetView.findViewById(R.id.gotopageBt);
+        gotopage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (pagnum.getText().toString().isEmpty()){
+                    pagnum.setError("Enter Number");
+                }else{
+                       int pageNumber=Integer.parseInt(pagnum.getText().toString());
+                       pdfView.jumpTo(pageNumber);
+                       bottomSheetDialog.dismiss();
+
+                }
+            }
+        });
+
+        LinearLayout share=bottomSheetView.findViewById(R.id.bottom_sharepdf);
+        ImageView icon=bottomSheetView.findViewById(R.id.mode_icon);
+        TextView modeName=bottomSheetView.findViewById(R.id.mode_name);
+
+        if(isBookmode){
+            icon.setImageResource(R.drawable.single_page);
+            modeName.setText("Normal Mode");
+        }else{
+
+
+            icon.setImageResource(R.drawable.ic_baseline_menu_book_24);
+            modeName.setText("Book Mode");
+
+        }
+
+        share.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sharepdf();
+                bottomSheetDialog.dismiss();
+            }
+        });
+
+        LinearLayout mode=bottomSheetView.findViewById(R.id.pagebybpage);
+        mode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                      isBookmode=!isBookmode;
+                      if(isBookmode){
+                          loadPdfFile(path,lastReadPageNumber);
+
+
+
+                          bottomSheetDialog.dismiss();
+                      }else{
+                          displayPDF(path,lastReadPageNumber);
+
+                          bottomSheetDialog.dismiss();
+                      }
+
+
+
+            }
+        });
+
+
+        bottomSheetDialog.setContentView(bottomSheetView);
+        bottomSheetDialog.show();
+
+    }
+
+
+     public void loadPdfFile(String pdfFilePath, int lastReadPage){
+
+             pdfView.removeAllViews();
+
+         pdfView.fromFile(new File(pdfFilePath))
+
+
+                 .defaultPage(lastReadPage)
+                 .enableSwipe(true) // allows to block changing pages using swipe
+                 .swipeHorizontal(true)
+                 .enableDoubletap(true)
+
+                 // allows to draw something on the current page, usually visible in the middle of the screen
+
+                 // allows to draw something on all pages, separately for every page. Called only for visible pages
+
+
+                 .onPageChange(new OnPageChangeListener() {
+                     @Override
+                     public void onPageChanged(int page, int pageCount) {
+                         lastReadPageNumber=page;
+                     }
+                 })
+                 .password(null)
+                 .scrollHandle(null)
+                 .enableAntialiasing(true) // improve rendering a little bit on low-res screens
+                 // spacing between pages in dp. To define spacing color, set view background
+                 .spacing(0)
+                 .autoSpacing(true) // add dynamic spacing to fit each page on its own on the screen
+
+                 .pageFitPolicy(FitPolicy.WIDTH) // mode to fit pages in the view
+                 .fitEachPage(false) // fit each page to the view, else smaller pages are scaled relative to largest page.
+                 .pageSnap(true) // snap pages to screen boundaries
+                 .pageFling(true) // make a fling change only a single page like ViewPager
+                 .nightMode(false)
+                 .scrollHandle(new CustormScroll(this))
+
+                 .onTap(new OnTapListener() {
+                     @Override
+                     public boolean onTap(MotionEvent e) {
+
+                         if (isToolbarVisible){
+                             getSupportActionBar().hide();
+                             isToolbarVisible=false;
+                         } else {
+                             // Show the toolbar
+                             getSupportActionBar().show();
+                             isToolbarVisible = true;
+                         }
+                         return false;
+                     }
+                 })
+
+
+                 .load();
+
+
+
+     }
 }

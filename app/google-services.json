@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "561746307932",
+    "project_id": "pdf-reader-d37c2",
+    "storage_bucket": "pdf-reader-d37c2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561746307932:android:0a641353447b8334d7af99",
+        "android_client_info": {
+          "package_name": "com.techtutor.pdfreadermaker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "561746307932-tfn0o88somh3uv30drb6ipc9lb7q8l6k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.techtutor.pdfreadermaker",
+            "certificate_hash": "8b7fefb3266413d58da3ee8dcdce306f4571234c"
+          }
+        },
+        {
+          "client_id": "561746307932-fqmvb5eeu4oj9pm5hcqc99545qv36gh2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADj-cHzIhNC2HFhONvFqP4mDrVsPDE9mA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "561746307932-fqmvb5eeu4oj9pm5hcqc99545qv36gh2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

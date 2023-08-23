@@ -24,9 +24,10 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
          switch (position){
+
              case 0: return  new AllPdfFile(mainActivity);
              case 1: return new RecentPdfFile(mainActivity);
-             case 2 :return new BookMarkPdfFile();
+             case 2 :return new BookMarkPdfFile(mainActivity);
              default:return new AllPdfFile(mainActivity);
 
 
@@ -37,4 +38,6 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     public int getItemCount() {
         return 3;
     }
+
+
 }
