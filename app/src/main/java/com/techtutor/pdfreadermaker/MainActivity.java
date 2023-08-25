@@ -1,6 +1,7 @@
 package com.techtutor.pdfreadermaker;
 
 
+import static android.content.ContentValues.TAG;
 import static com.techtutor.pdfreadermaker.MyApp.db;
 
 import androidx.annotation.NonNull;
@@ -33,6 +34,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,6 +62,11 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.android.play.core.review.ReviewInfo;
 import com.google.android.play.core.review.ReviewManager;
 import com.google.android.play.core.review.ReviewManagerFactory;
+import com.google.android.ump.ConsentDebugSettings;
+import com.google.android.ump.ConsentForm;
+import com.google.android.ump.ConsentInformation;
+import com.google.android.ump.ConsentRequestParameters;
+import com.google.android.ump.UserMessagingPlatform;
 import com.techtutor.pdfreadermaker.Adapter.PdfData;
 import com.techtutor.pdfreadermaker.Fragment.AllPdfFile;
 import com.techtutor.pdfreadermaker.Permission.Utils;
@@ -81,7 +88,7 @@ import java.util.Locale;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -104,6 +111,11 @@ public class MainActivity extends AppCompatActivity {
 
     ReviewInfo reviewInfo;
     ReviewManager reviewManager;
+
+    private ConsentInformation consentInformation;
+    // Use an atomic boolean to initialize the Google Mobile Ads SDK and load ads once.
+    private final AtomicBoolean isMobileAdsInitializeCalled = new AtomicBoolean(false);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -113,28 +125,8 @@ public class MainActivity extends AppCompatActivity {
         viewPager=findViewById(R.id.viewpager);
         morebutton=findViewById(R.id.more);
 
-        if(!Utils.isPermissonGranted(this)){
-            new AlertDialog.Builder(this)
-                    .setTitle("All files Permission")
-                    .setMessage("Due to Android 11 restriction, this app requires all files permission")
-                    .setPositiveButton("Allow", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            takePermission();
-                        }
-                    })
-                    .setNegativeButton("Deny", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
+        loadPermission();
 
-                        }
-                    }).setIcon(android.R.drawable.ic_dialog_alert)
-                    .setCancelable(false)
-                    .show();
-        }else{
-            // Toast.makeText(this,"Permission Already Granted", Toast.LENGTH_SHORT).show();
-            init();
-        }
 
 
 
@@ -270,6 +262,35 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void loadPermission() {
+
+        if(!Utils.isPermissonGranted(this)){
+            new AlertDialog.Builder(this)
+                    .setTitle("All files Permission")
+                    .setMessage("Due to Android 11 restriction, this app requires all files permission")
+                    .setPositiveButton("Allow", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            takePermission();
+                        }
+                    })
+                    .setNegativeButton("Deny", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    }).setIcon(android.R.drawable.ic_dialog_alert)
+                    .setCancelable(false)
+                    .show();
+        }else{
+            // Toast.makeText(this,"Permission Already Granted", Toast.LENGTH_SHORT).show();
+            init();
+        }
+
+
+
+    }
+
     private void filterlist(String newText) {
 
         List<PdfData> filterList=new ArrayList<>();
@@ -338,7 +359,58 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-      //  db= Room.databaseBuilder(getApplicationContext(),DatabaseForPDF.class,"PdfFile").allowMainThreadQueries().build();
+        ConsentDebugSettings debugSettings = new ConsentDebugSettings.Builder(this)
+                .addTestDeviceHashedId("36AC515B03D289296D467572BED30BE8")
+                .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+                .build();
+
+        ConsentRequestParameters params = new ConsentRequestParameters
+                .Builder()
+                .setConsentDebugSettings(debugSettings)
+                .setTagForUnderAgeOfConsent(false)
+                .build();
+
+        consentInformation = UserMessagingPlatform.getConsentInformation(this);
+        consentInformation.requestConsentInfoUpdate(
+                this,
+                params,
+                (ConsentInformation.OnConsentInfoUpdateSuccessListener) () -> {
+                    UserMessagingPlatform.loadAndShowConsentFormIfRequired(
+                            this,
+                            (ConsentForm.OnConsentFormDismissedListener) loadAndShowError -> {
+                                if (loadAndShowError != null) {
+                                    // Consent gathering failed.
+                                    Log.w(TAG, String.format("%s: %s",
+                                            loadAndShowError.getErrorCode(),
+                                            loadAndShowError.getMessage()));
+                                }
+
+                                // Consent has been gathered.
+                                if (consentInformation.canRequestAds()) {
+                                    initializeMobileAdsSdk();
+                                }
+                            }
+                    );
+                },
+                (ConsentInformation.OnConsentInfoUpdateFailureListener) requestConsentError -> {
+                    // Consent gathering failed.
+                    Log.w(TAG, String.format("%s: %s",
+                            requestConsentError.getErrorCode(),
+                            requestConsentError.getMessage()));
+                });
+
+        // Check if you can initialize the Google Mobile Ads SDK in parallel
+        // while checking for new consent information. Consent obtained in
+        // the previous session can be used to request ads.
+        if (consentInformation.canRequestAds()) {
+            initializeMobileAdsSdk();
+        }
+
+    }
+
+    private void initializeMobileAdsSdk() {
+
+
 
     }
 
@@ -617,6 +689,9 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode==101){
             init();
+        }else{
+            loadPermission();
+            Toast.makeText(this,"We need permission",Toast.LENGTH_SHORT).show();
         }
     }
 

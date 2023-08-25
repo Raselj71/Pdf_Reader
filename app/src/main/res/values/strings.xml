@@ -1,5 +1,10 @@
 <resources>
     <string name="app_name">Pdf Reader </string>
-    <!-- TODO: Remove or change this placeholder text -->
+
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+    <string name="Admob_app_id">ca-app-pub-7774622811365016~7356172227</string>
+    <string name="Admob_banner_ad_unit">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="Admob_interstitial_ad_unit">ca-app-pub-7774622811365016/1040957887</string>
 </resources>

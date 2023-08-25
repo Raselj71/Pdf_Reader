@@ -37,6 +37,7 @@
                 android:value="" />
         </activity>
         <activity
+            android:hardwareAccelerated="true"
             android:name=".PdfPreview"
             android:exported="false"
             android:parentActivityName=".MainActivity">

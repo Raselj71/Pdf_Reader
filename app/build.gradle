@@ -55,6 +55,12 @@ dependencies {
 
     implementation 'com.google.ads.mediation:facebook:6.15.0.0'
     implementation 'com.google.android.play:review:2.0.1'
+    implementation 'com.google.android.ump:user-messaging-platform:2.1.0'
+
+
+    def lottieVersion = "3.4.0"
+    implementation "com.airbnb.android:lottie:$lottieVersion"
+
 
 
 }
